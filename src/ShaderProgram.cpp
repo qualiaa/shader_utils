@@ -9,6 +9,9 @@
 ShaderProgram::ShaderProgram()
     : id_{glCreateProgram()}
 {
+    if (not id_) {
+        throw GLException("Could not allocate shader program");
+    }
 }
 
 template <typename ForwardIt>
@@ -21,20 +24,22 @@ ShaderProgram::ShaderProgram(std::move_iterator<ForwardIt> start,
         "Must contain objects of type ShaderObject"
     );
 
-    std::for_each(start, end, [this](auto&& x) { attachShader(std::move(x)); });
+    std::for_each(start, end, [this](auto&& x) { attachObject(std::move(x)); });
 }
 
-ShaderProgram::ShaderProgram(ShaderProgram&& that)
-    : id_{that.id_}
-    , attached_shaders_{that.attached_shaders_}
+ShaderProgram::ShaderProgram(ShaderProgram&& other)
+    : id_{other.id_}
+    , attached_objects_{other.attached_objects_}
+    , linked_{other.linked_}
 {
-    that.id_ = 0;
-    that.attached_shaders_.clear();
+    other.id_ = 0;
+    other.attached_objects_.clear();
+    other.linked_ = false;
 }
 
-ShaderProgram& ShaderProgram::operator=(ShaderProgram&& that)
+ShaderProgram& ShaderProgram::operator=(ShaderProgram&& other)
 {
-    ShaderProgram temp(std::move(that));
+    ShaderProgram temp(std::move(other));
     swap(*this,temp);
     return *this;
 }
@@ -44,43 +49,66 @@ ShaderProgram::~ShaderProgram()
     glDeleteProgram(id_);
 }
 
-void ShaderProgram::attachShader(ShaderObject&& so)
+void ShaderProgram::bind(ShaderProgram const& s)
 {
-    attached_shaders_.push_back(std::make_shared<ShaderObject>(std::move(so)));
-    glAttachShader(id_, *attached_shaders_.back());
+    if (not s.linked_) {
+        throw GLException("Attempted to bind shader program which is not linked");
+    }
+    glUseProgram(s.id_);
 }
 
-void ShaderProgram::attachShader(ShaderPtr const& p)
+void ShaderProgram::unbind()
 {
-    auto beg = attached_shaders_.begin();
-    auto end = attached_shaders_.end();
+    glUseProgram(0);
+}
+
+void ShaderProgram::attachObject(ShaderObject&& so)
+{
+    attached_objects_.push_back(std::make_shared<ShaderObject>(std::move(so)));
+    glAttachShader(id_, *attached_objects_.back());
+}
+
+void ShaderProgram::attachObject(ObjectPtr const& p)
+{
+    auto beg = attached_objects_.begin();
+    auto end = attached_objects_.end();
 
     auto res = std::find_if(beg, end,
-            [&p] (ShaderPtr const& x) {
+            [&p] (ObjectPtr const& x) {
                 return p.get() == x.get();
             });
 
     if (res == end) {
-        glAttachShader(id_, *attached_shaders_.back());
-        attached_shaders_.push_back(p);
+        attached_objects_.push_back(p);
+        glAttachShader(id_, *attached_objects_.back());
     }
 }
 
-void ShaderProgram::detachShader(ShaderPtr const& p) {
-    auto beg = attached_shaders_.begin();
-    auto end = attached_shaders_.end();
+void ShaderProgram::detachObject(ObjectPtr const& p)
+{
+    auto beg = attached_objects_.begin();
+    auto end = attached_objects_.end();
 
     auto res =
         std::remove_if(beg, end,
-            [&p] (ShaderPtr const& x) {
+            [&p] (ObjectPtr const& x) {
                 return p.get() == x.get();
             });
 
     if (res != end) {
         glDetachShader(id_, *p);
-        attached_shaders_.erase(res,end);
+        attached_objects_.erase(res,end);
     }
 }
+
+void ShaderProgram::detachAllObjects()
+{
+    for (auto object : attached_objects_) {
+        glDetachShader(id_, *object);
+    }
+    attached_objects_.clear();
+}
+
 
 void ShaderProgram::link()
 {
@@ -92,6 +120,8 @@ void ShaderProgram::link()
     if (status == GL_FALSE) {
         throw GLShaderLinkError{log};
     }
+
+    linked_ = true;
 }
 
 std::pair<GLboolean, std::string> ShaderProgram::getLinkErrors() const
@@ -116,5 +146,6 @@ void swap(ShaderProgram& a, ShaderProgram& b) noexcept
     using std::swap;
 
     swap(a.id_, b.id_);
-    swap(a.attached_shaders_, b.attached_shaders_);
+    swap(a.attached_objects_, b.attached_objects_);
+    swap(a.linked_, b.linked_);
 }

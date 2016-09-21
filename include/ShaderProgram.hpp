@@ -10,33 +10,37 @@
 class ShaderProgram
 {
 public:
-    using ShaderPtr = std::shared_ptr<ShaderObject>;
-    using ShaderPtrList = std::vector<ShaderPtr>;
+    using ObjectPtr = std::shared_ptr<ShaderObject>;
+    using ObjectPtrList = std::vector<ObjectPtr>;
 
 private:
     GLuint id_;
-    ShaderPtrList attached_shaders_;
+    ObjectPtrList attached_objects_;
+    bool linked_ = false;
 
 public:
+    static void bind(ShaderProgram const&);
+    static void unbind();
+
     ShaderProgram();
     template <typename ForwardIt>
     ShaderProgram(std::move_iterator<ForwardIt> start,
                   std::move_iterator<ForwardIt> end);
+    ShaderProgram(ShaderProgram const&) = delete;
+    ShaderProgram& operator=(ShaderProgram const&) = delete;
     ShaderProgram(ShaderProgram&&);
     ShaderProgram& operator=(ShaderProgram&&);
     ~ShaderProgram();
 
-    ShaderPtrList const& attachedShaders() const { return attached_shaders_;  }
-    void attachShader(ShaderObject&&);
-    void attachShader(ShaderPtr const&);
-    void detachShader(ShaderPtr const&);
+    ObjectPtrList const& attachedObjects() const { return attached_objects_;  }
+    void attachObject(ShaderObject&&);
+    void attachObject(ObjectPtr const&);
+    void detachObject(ObjectPtr const&);
+    void detachAllObjects();
     void link();
 
     std::pair<GLboolean, std::string> getLinkErrors() const;
 
     operator GLuint() const { return id_; }
     friend void swap(ShaderProgram&, ShaderProgram&) noexcept;
-
-    ShaderProgram(ShaderProgram const&) = delete;
-    ShaderProgram& operator=(ShaderProgram const&) = delete;
 };

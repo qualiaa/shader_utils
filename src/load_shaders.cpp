@@ -56,7 +56,7 @@ void compile_shaders(ShaderObjectList& shader_objects)
             o.compile();
         }
         catch (GLShaderCompileError const& e) {
-            std::cerr << "Compilation error in shader " << o.getOrigin() << std::endl;
+            std::cerr << "Compilation error in shader " << std::endl;
             std::cerr << std::string('#',60) << std::endl;
             std::cerr << e.what() << std::endl;
             success = false;
@@ -72,6 +72,6 @@ void attach_shaders(ShaderProgram& program,
                     ShaderObjectList& objects)
 {
     for (auto& o : objects) {
-        program.attachShader(std::move(o));
+        program.attachObject(std::move(o));
     }
 }
