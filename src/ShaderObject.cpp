@@ -1,15 +1,14 @@
 #include "ShaderObject.hpp"
 
 #include <stdexcept>
+#include <sstream>
 #include <tuple>
 #include "read_file_to_string.hpp"
 #include "GLException.hpp"
 
 ShaderObject::ShaderObject(GLenum type,
-                           std::string const& source,
-                           std::string const& origin)
+                           std::string const& source)
     : type_   {type}
-    , origin_ {origin}
 {
     id_ = glCreateShader(type);
     if(id_ <= 0) {
@@ -21,22 +20,37 @@ ShaderObject::ShaderObject(GLenum type,
     glShaderSource(id_, 1, &source_addr, NULL);
 }
 
+ShaderObject::ShaderObject(std::istream const& stream, GLenum type)
+    : type_   {type}
+{
+    id_ = glCreateShader(type);
+    if(id_ <= 0) {
+        // TODO: use GL error handling properly
+        throw std::runtime_error{"Could not allocate shader"};
+    }
+
+    std::stringstream sstream;
+    sstream << stream.rdbuf();
+    std::string const& source = sstream.str();
+
+    char const* source_addr = &source[0];
+    glShaderSource(id_, 1, &source_addr, NULL);
+
+}
+
 ShaderObject::ShaderObject(ShaderSource const& source)
     : ShaderObject{source.shader_type,
-                   source.source,
-                   "memory"}
+                   source.source}
 { }
 
 ShaderObject::ShaderObject(ShaderFile const& file)
     : ShaderObject(file.shader_type,
-                   read_file_to_string(file.path),
-                   file.path)
+                   read_file_to_string(file.path))
 { }
 
 ShaderObject::ShaderObject(ShaderObject&& that)
     : id_     {that.id_}
     , type_   {that.type_}
-    , origin_ {std::move(that.origin_)}
 {
     that.id_ = 0;
     that.type_ = GL_NONE;
@@ -76,6 +90,7 @@ std::pair<GLboolean, std::string> ShaderObject::getCompileErrors() const
     if (compile_status == GL_FALSE) {
         GLint log_length;
         glGetShaderiv(id_, GL_INFO_LOG_LENGTH, &log_length);
+
         error_string.resize(log_length);
         glGetShaderInfoLog(id_, log_length, NULL, &(error_string[0]));
     }
@@ -101,5 +116,4 @@ void swap(ShaderObject& a, ShaderObject& b) noexcept
 
     swap(a.id_, b.id_);
     swap(a.type_, b.type_);
-    swap(a.origin_, b.origin_);
 }
