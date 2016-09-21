@@ -2,9 +2,12 @@
 
 #include <algorithm>
 #include <functional>
+#include <sstream>
 #include <tuple>
 #include <vector>
 #include "GLException.hpp"
+
+GLuint ShaderProgram::boundId_ {0};
 
 ShaderProgram::ShaderProgram()
     : id_{glCreateProgram()}
@@ -49,17 +52,158 @@ ShaderProgram::~ShaderProgram()
     glDeleteProgram(id_);
 }
 
+void ShaderProgram::setUniform(std::string name, GLint v)              const
+{
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniform1i(uniformId,v);
+}
+void ShaderProgram::setUniform(std::string name, GLuint v)             const
+{
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniform1ui(uniformId,v);
+}
+void ShaderProgram::setUniform(std::string name, GLfloat v)            const
+{
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniform1f(uniformId,v);
+}
+void ShaderProgram::setUniform(std::string name, GLdouble v)           const
+{
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniform1d(uniformId,v);
+}
+void ShaderProgram::setUniform(std::string name, glm::vec2 const& v)   const
+{
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniform2fv(uniformId,2,&v[0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::vec3 const& v)   const
+{
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniform3fv(uniformId,3,&v[0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::vec4 const& v)   const
+{
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniform4fv(uniformId,4,&v[0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::dvec2 const& v)  const
+{
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniform2dv(uniformId,2,&v[0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::dvec3 const& v)  const
+{
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniform3dv(uniformId,3,&v[0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::dvec4 const& v)  const
+{
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniform4dv(uniformId,4,&v[0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::ivec2 const& v)  const
+{
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniform2iv(uniformId,2,&v[0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::ivec3 const& v)  const
+{
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniform3iv(uniformId,3,&v[0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::ivec4 const& v)  const
+{
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniform4iv(uniformId,4,&v[0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::uvec2 const& v) const
+{
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniform2uiv(uniformId,2,&v[0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::uvec3 const& v) const
+{
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniform3uiv(uniformId,3,&v[0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::uvec4 const& v) const
+{
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniform4uiv(uniformId,4,&v[0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::mat2 const& v, bool t)   const
+{
+    GLboolean b = t ? GL_TRUE : GL_FALSE;
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniformMatrix2fv(uniformId,2,b,&v[0][0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::mat3 const& v, bool t)   const
+{
+    GLboolean b = t ? GL_TRUE : GL_FALSE;
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniformMatrix3fv(uniformId,3,b,&v[0][0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::mat4 const& v, bool t)   const
+{
+    GLboolean b = t ? GL_TRUE : GL_FALSE;
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniformMatrix4fv(uniformId,4,b,&v[0][0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::dmat2 const& v, bool t)  const
+{
+    GLboolean b = t ? GL_TRUE : GL_FALSE;
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniformMatrix2dv(uniformId,2,b,&v[0][0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::dmat3 const& v, bool t)  const
+{
+    GLboolean b = t ? GL_TRUE : GL_FALSE;
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniformMatrix3dv(uniformId,3,b,&v[0][0]);
+}
+void ShaderProgram::setUniform(std::string name, glm::dmat4 const& v, bool t)  const
+{
+    GLboolean b = t ? GL_TRUE : GL_FALSE;
+    ensureProgramIsBound();
+    GLuint uniformId = getUniformLocation(name);
+    glUniformMatrix4dv(uniformId,4,b,&v[0][0]);
+}
+
 void ShaderProgram::bind(ShaderProgram const& s)
 {
     if (not s.linked_) {
         throw GLException("Attempted to bind shader program which is not linked");
     }
     glUseProgram(s.id_);
+    boundId_ = s.id_;
 }
 
 void ShaderProgram::unbind()
 {
     glUseProgram(0);
+    boundId_ = 0;
 }
 
 void ShaderProgram::attachObject(ShaderObject&& so)
@@ -141,6 +285,18 @@ std::pair<GLboolean, std::string> ShaderProgram::getLinkErrors() const
     return {link_status, error_string};
 }
 
+bool ShaderProgram::bound() const
+{
+    return id_ == boundId_;
+}
+
+void ShaderProgram::ensureProgramIsBound() const
+{
+    if (not bound()) {
+        throw GLException("Attempted to set uniform on unbound shader");
+    }
+}
+
 void swap(ShaderProgram& a, ShaderProgram& b) noexcept
 {
     using std::swap;
@@ -148,4 +304,15 @@ void swap(ShaderProgram& a, ShaderProgram& b) noexcept
     swap(a.id_, b.id_);
     swap(a.attached_objects_, b.attached_objects_);
     swap(a.linked_, b.linked_);
+}
+
+GLuint ShaderProgram::getUniformLocation(std::string const& name) const
+{
+    GLuint uniformId = glGetUniformLocation(id_, name.c_str());
+    if (uniformId == -1) {
+        std::stringstream sstream;
+        sstream << "Uniform " << name << " not found in shader";
+        throw GLException(sstream.str());
+    }
+    return uniformId;
 }
