@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 #include <GL/glew.h>
-#include <glm/glm.hpp>
+#include <glm/fwd.hpp>
 #include "ShaderObject.hpp"
 #include "ShaderFile.hpp"
 
@@ -71,6 +71,7 @@ public:
     void detachAllObjects();
     void link();
 
+    GLuint getId() const { return id_; }
     std::pair<GLboolean, std::string> getLinkErrors() const;
     bool bound() const;
 
@@ -79,5 +80,5 @@ public:
 
 private:
     void ensureProgramIsBound() const;
-    GLuint getUniformLocation(std::string const& name) const;
+    GLint getUniformLocation(std::string const& name) const;
 };
