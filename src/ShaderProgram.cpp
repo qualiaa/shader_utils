@@ -308,11 +308,5 @@ void swap(ShaderProgram& a, ShaderProgram& b) noexcept
 
 GLuint ShaderProgram::getUniformLocation(std::string const& name) const
 {
-    GLuint uniformId = glGetUniformLocation(id_, name.c_str());
-    if (uniformId == -1) {
-        std::stringstream sstream;
-        sstream << "Uniform " << name << " not found in shader";
-        throw GLException(sstream.str());
-    }
-    return uniformId;
+    return glGetUniformLocation(id_, name.c_str());
 }
